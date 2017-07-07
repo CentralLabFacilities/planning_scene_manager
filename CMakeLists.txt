@@ -38,3 +38,13 @@ add_executable(	planning_scene_manager
 )
 
 target_link_libraries(planning_scene_manager ${catkin_LIBRARIES})
+
+
+
+install(TARGETS planning_scene_manager
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
