@@ -1,3 +1,5 @@
 .nbprject
 build
 *.swp
+.idea/
+cmake-build-debug/

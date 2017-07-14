@@ -42,17 +42,14 @@ class PlanningSceneManager
 private:
     ros::NodeHandle nh;
     actionlib::SimpleActionServer<planning_scene_manager_msgs::PlanningSceneManagerRequestAction> psm_server;
-    //actionlib::SimpleActionClient<grasping_msgs::FitPrimitivesAction> object_fitter_client;
+    actionlib::SimpleActionClient<grasping_msgs::FitPrimitivesAction> object_fitter_client;
     std::string action_name;
     std::string object_fitter_scope;
 
-    ros::Subscriber scene_subscriber;
     ros::Publisher scene_publisher;
-    moveit_msgs::PlanningScene current_planning_scene;
     ros::ServiceClient object_tracker_client;
 
 
-    void sceneCallback(const moveit_msgs::PlanningScene& new_ps);
 
 public:
     PlanningSceneManager(std::string name, std::string fitter_server);

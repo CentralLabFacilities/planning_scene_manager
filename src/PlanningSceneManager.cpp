@@ -14,33 +14,27 @@
 
 
 PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_server):
-        psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false)//,
-        //object_fitter_client(fitter_server, true)
+        psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false),
+        object_fitter_client(fitter_server, true)
 {
 
-     //   psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false);
-      //  object_fitter_client(fitter_server, true);
-
     ROS_INFO("starting psm action server");
+
     //start this action server
     psm_server.start();
-    
 
-    //
     object_tracker_client = nh.serviceClient<planning_scene_manager_msgs::Segmentation>("/segmentation");
     ROS_INFO("started segmentation client");
 
     // planning_scene publisher/ subscriber
-    scene_subscriber = nh.subscribe("planning_scene", 10, &PlanningSceneManager::sceneCallback, this);
     scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
     ROS_INFO("started nodes for planning_scene");
     
-    //ROS_INFO("waiting for object_fitter");
+    ROS_INFO("waiting for object_fitter");
+
     //wait for objectfitter to be running
-    //object_fitter_client.waitForServer();
-    //ROS_INFO("found object_fitter server");
-    
-    ROS_INFO("psm exit constructor");
+    object_fitter_client.waitForServer();
+    ROS_INFO("found object_fitter server");
 }
 
 
@@ -55,6 +49,8 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
         ROS_ERROR("failed to connect to object segmentation service");
     }
 
+    ROS_INFO_STREAM("got " << seg.response.objects.size() << " objects and " << seg.response.support_surfaces.size() << " planes");
+
     //translate answer Segmentation to grasping_msgs::FitPrimitivesAction
     //seg -> fp
     grasping_msgs::FitPrimitivesGoal fp_goal;
@@ -64,14 +60,21 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     fp_goal.config_names = seg.response.config_names;
 
     //send action to ObjectFitter
-    //object_fitter_client.sendGoal(fp_goal);
-        //check every 0.1 seconds whether object fitter ist done
-    //while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
-    //ROS_INFO("ObjectFitter finished with state: %s", object_fitter_client.getState().toString().c_str());
+    object_fitter_client.sendGoal(fp_goal);
+    //check every 0.1 seconds whether object fitter ist done
+    while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
+
+
+    // get fitter result
+    grasping_msgs::FitPrimitivesResultConstPtr fitter_result_ptr;
+    fitter_result_ptr = object_fitter_client.getResult();
+    ROS_INFO_STREAM("ObjectFitter finished with state: " << object_fitter_client.getState().toString() << " and gave back " << fitter_result_ptr.get()->objects.size() << " objects");
+
     //translate changes to mvoeit planning scene update
     moveit_msgs::PlanningScene ps_update;
     ps_update.is_diff = true;
 
+    moveit_msgs::PlanningScene planning_scene;
 
         //build collision objects
     for (grasping_msgs::Object object : fp_goal.objects){
@@ -79,21 +82,19 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
 
         fit_obj.header = object.header;
         fit_obj.id = object.name;
-        object_recognition_msgs::ObjectType ot;
         fit_obj.primitives = object.primitives;
         fit_obj.primitive_poses = object.primitive_poses;
-        //fit_obj.meshes =  object.meshes; currently unused
-        //fit_obj.mesh_poses = object.mesh_poses;
         fit_obj.operation = fit_obj.ADD;
 
-        current_planning_scene.world.collision_objects.push_back(fit_obj);
+        planning_scene.world.collision_objects.push_back(fit_obj);
     }
+
+    planning_scene_manager_msgs::PlanningSceneManagerRequestResult result;
 
     //publish changes to planning_scene
     scene_publisher.publish(ps_update);
-    ros::spinOnce();
-}
 
-void PlanningSceneManager::sceneCallback(const moveit_msgs::PlanningScene& new_ps){
-    this->current_planning_scene = new_ps;
+    ROS_INFO("sending result");
+    psm_server.setSucceeded(result);
+
 }
