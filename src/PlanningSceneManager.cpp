@@ -89,8 +89,26 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
         fit_obj.primitive_poses = object.primitive_poses;
         fit_obj.operation = fit_obj.ADD;
 
+        ROS_INFO_STREAM("adding object");
+
         planning_scene.world.collision_objects.push_back(fit_obj);
     }
+
+    // copy planes
+    for (grasping_msgs::Object object : seg.response.support_surfaces){
+        moveit_msgs::CollisionObject plane;
+
+        plane.header = object.header;
+        plane.id = object.name;
+        plane.primitives = object.primitives;
+        plane.primitive_poses = object.primitive_poses;
+        plane.operation = plane.ADD;
+
+        ROS_INFO_STREAM("adding plane");
+
+        planning_scene.world.collision_objects.push_back(plane);
+    }
+
 
     planning_scene_manager_msgs::PlanningSceneManagerRequestResult result;
 
