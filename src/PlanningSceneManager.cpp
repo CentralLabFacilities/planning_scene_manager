@@ -14,28 +14,37 @@
 
 
 PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_server):
-        psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false),
-        object_fitter_client(fitter_server, true)
+        psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false)//,
+        //object_fitter_client(fitter_server, true)
 {
 
+     //   psm_server(nh, name, boost::bind(&PlanningSceneManager::execute, this, _1), false);
+      //  object_fitter_client(fitter_server, true);
+
+    ROS_INFO("starting psm action server");
     //start this action server
     psm_server.start();
-
-
-    //wait for objectfitter to be running
-    object_fitter_client.waitForServer();
+    
 
     //
-    object_tracker_client = nh.serviceClient<planning_scene_manager_msgs::Segmentation>("segmented_objects");
+    object_tracker_client = nh.serviceClient<planning_scene_manager_msgs::Segmentation>("/segmentation");
+    ROS_INFO("started segmentation client");
 
     // planning_scene publisher/ subscriber
     scene_subscriber = nh.subscribe("planning_scene", 10, &PlanningSceneManager::sceneCallback, this);
     scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    ROS_INFO("started nodes for planning_scene");
     
-};
+    //ROS_INFO("waiting for object_fitter");
+    //wait for objectfitter to be running
+    //object_fitter_client.waitForServer();
+    //ROS_INFO("found object_fitter server");
+    
+    ROS_INFO("psm exit constructor");
+}
 
 
-PlanningSceneManager::~PlanningSceneManager(void){};
+PlanningSceneManager::~PlanningSceneManager(void){psm_server.shutdown();}
 
 void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSceneManagerRequestGoalConstPtr &goal) {
     //process call from bonsai or sth
@@ -55,10 +64,10 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     fp_goal.config_names = seg.response.config_names;
 
     //send action to ObjectFitter
-    object_fitter_client.sendGoal(fp_goal);
+    //object_fitter_client.sendGoal(fp_goal);
         //check every 0.1 seconds whether object fitter ist done
-    while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
-    ROS_INFO("ObjectFitter finished with state: %s", object_fitter_client.getState().toString().c_str());
+    //while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
+    //ROS_INFO("ObjectFitter finished with state: %s", object_fitter_client.getState().toString().c_str());
     //translate changes to mvoeit planning scene update
     moveit_msgs::PlanningScene ps_update;
     ps_update.is_diff = true;
