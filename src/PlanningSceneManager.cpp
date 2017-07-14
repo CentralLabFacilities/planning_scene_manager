@@ -64,20 +64,23 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     //check every 0.1 seconds whether object fitter ist done
     while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
 
+    ROS_INFO("Clearing the Scene.");
+    moveit_msgs::PlanningScene planning_scene_clear;
+    planning_scene_clear.robot_state.attached_collision_objects.clear();
+    planning_scene_clear.world.collision_objects.clear();
+    planning_scene_clear.is_diff = true;
+    scene_publisher.publish(planning_scene_clear);
+
 
     // get fitter result
     grasping_msgs::FitPrimitivesResultConstPtr fitter_result_ptr;
     fitter_result_ptr = object_fitter_client.getResult();
     ROS_INFO_STREAM("ObjectFitter finished with state: " << object_fitter_client.getState().toString() << " and gave back " << fitter_result_ptr.get()->objects.size() << " objects");
 
-    //translate changes to mvoeit planning scene update
-    moveit_msgs::PlanningScene ps_update;
-    ps_update.is_diff = true;
-
     moveit_msgs::PlanningScene planning_scene;
 
         //build collision objects
-    for (grasping_msgs::Object object : fp_goal.objects){
+    for (grasping_msgs::Object object : fitter_result_ptr.get()->objects){
         moveit_msgs::CollisionObject fit_obj;
 
         fit_obj.header = object.header;
@@ -92,7 +95,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     planning_scene_manager_msgs::PlanningSceneManagerRequestResult result;
 
     //publish changes to planning_scene
-    scene_publisher.publish(ps_update);
+    scene_publisher.publish(planning_scene);
 
     ROS_INFO("sending result");
     psm_server.setSucceeded(result);
