@@ -114,6 +114,8 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     planning_scene_manager_msgs::PlanningSceneManagerRequestResult result;
 
     //publish changes to planning_scene
+    planning_scene.is_diff = true;
+    planning_scene.robot_state.is_diff = true;
     scene_publisher.publish(planning_scene);
 
     ROS_INFO("sending result");
