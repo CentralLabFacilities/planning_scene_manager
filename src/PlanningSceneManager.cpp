@@ -69,7 +69,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     planning_scene_clear.robot_state.attached_collision_objects.clear();
     planning_scene_clear.world.collision_objects.clear();
     planning_scene_clear.is_diff = true;
-    //planning_scene_clear.robot_state.is_diff = true;
+    planning_scene_clear.robot_state.is_diff = true;
     scene_publisher.publish(planning_scene_clear);
 
 
