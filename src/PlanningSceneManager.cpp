@@ -64,6 +64,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     //check every 0.1 seconds whether object fitter ist done
     while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
 
+
     // clear old planning scene
     if(prev_objects.size() > 0){
         ROS_INFO("We have old objects, clearing them.");
