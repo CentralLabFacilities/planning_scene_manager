@@ -49,7 +49,7 @@ private:
     ros::Publisher scene_publisher;
     ros::ServiceClient object_tracker_client;
 
-
+    std::vector<moveit_msgs::CollisionObject> prev_objects;
 
 public:
     PlanningSceneManager(std::string name, std::string fitter_server);

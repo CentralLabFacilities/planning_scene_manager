@@ -64,14 +64,29 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     //check every 0.1 seconds whether object fitter ist done
     while(!object_fitter_client.waitForResult(ros::Duration(0.1)));
 
-    ROS_INFO("Clearing the Scene.");
-    moveit_msgs::PlanningScene planning_scene_clear;
-    planning_scene_clear.robot_state.attached_collision_objects.clear();
-    planning_scene_clear.world.collision_objects.clear();
-    planning_scene_clear.is_diff = true;
-    planning_scene_clear.robot_state.is_diff = true;
-    scene_publisher.publish(planning_scene_clear);
+    // clear old planning scene
+    if(prev_objects.size() > 0){
+        ROS_INFO("We have old objects, clearing them.");
 
+        moveit_msgs::PlanningScene planning_scene_clear;
+        planning_scene_clear.robot_state.attached_collision_objects.clear();
+        planning_scene_clear.world.collision_objects.clear();
+        planning_scene_clear.is_diff = true;
+        planning_scene_clear.robot_state.is_diff = true;
+
+        for(moveit_msgs::CollisionObject o : prev_objects){
+            ROS_INFO_STREAM("Removing " << o.id);
+            o.operation = o.REMOVE;
+            planning_scene_clear.world.collision_objects.push_back(o);
+        }
+
+        scene_publisher.publish(planning_scene_clear);
+
+        prev_objects.clear();
+
+    } else {
+        ROS_INFO("No old objects, skipping clearing.");
+    }
 
     // get fitter result
     grasping_msgs::FitPrimitivesResultConstPtr fitter_result_ptr;
@@ -93,6 +108,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
         ROS_INFO_STREAM("adding object");
 
         planning_scene.world.collision_objects.push_back(fit_obj);
+        prev_objects.push_back(fit_obj);
     }
 
     // copy planes
@@ -108,6 +124,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
         ROS_INFO_STREAM("adding plane");
 
         planning_scene.world.collision_objects.push_back(plane);
+        prev_objects.push_back(plane);
     }
 
 
@@ -118,7 +135,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     planning_scene.robot_state.is_diff = true;
     scene_publisher.publish(planning_scene);
 
-    ROS_INFO("sending result");
+    ROS_INFO_STREAM("sending result, storing " << prev_objects.size() << " obstacle(s)");
     psm_server.setSucceeded(result);
 
 }
