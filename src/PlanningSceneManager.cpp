@@ -36,7 +36,7 @@ PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_
     object_fitter_client.waitForServer();
     ROS_INFO("found object_fitter server");
     
-    this->object_in_gripper.id = -1;
+    this->object_in_gripper.id = "";
 }
 
 
@@ -77,7 +77,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
         planning_scene_clear.robot_state.is_diff = true;
 
         for(moveit_msgs::CollisionObject o : prev_objects){
-            if(o.id == this->object_in_gripper.id){
+            if(o.id == this->object_in_gripper.object.id){
                 ROS_INFO_STREAM("NOT removing" << o.id);
                 continue;
             }
@@ -151,6 +151,6 @@ void PlanningSceneManager::sceneCallback(const moveit_msgs::PlanningScene& updat
     this->currentScene = update;
     if(currentScene.robot_state.attached_collision_objects.size() > 0){
         ROS_INFO_STREAM("update attached collision object in robot state");
-        this->object_in_gripper = currentScene.robot_state.attached_collision_objects.at(0);
+        this->object_in_gripper = currentScene.robot_state.attached_collision_objects[0];
     }
 }

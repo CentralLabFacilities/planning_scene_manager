@@ -52,7 +52,7 @@ private:
     moveit_msgs::PlanningScene currentScene;
     
     std::vector<moveit_msgs::CollisionObject> prev_objects;
-    moveit_msgs::CollisionObject object_in_gripper;
+    moveit_msgs::AttachedCollisionObject object_in_gripper;
 
 public:
     PlanningSceneManager(std::string name, std::string fitter_server);
