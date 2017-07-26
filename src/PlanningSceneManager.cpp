@@ -27,7 +27,7 @@ PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_
     ROS_INFO("started segmentation client");
 
     // planning_scene publisher/ subscriber
-    scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 10, PlanningSceneManager::sceneCallback, this);
+    scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 10, &PlanningSceneManager::sceneCallback, this);
     ROS_INFO("started nodes for planning_scene");
     
     ROS_INFO("waiting for object_fitter");
