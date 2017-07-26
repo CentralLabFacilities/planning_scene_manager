@@ -47,8 +47,9 @@ private:
     std::string object_fitter_scope;
 
     ros::Publisher scene_publisher;
+    ros::Subscriber scene_subscriber;
     ros::ServiceClient object_tracker_client;
-
+    
     moveit_msgs::PlanningScene currentScene;
     
     std::vector<moveit_msgs::CollisionObject> prev_objects;
