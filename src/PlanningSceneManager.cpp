@@ -27,7 +27,7 @@ PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_
     ROS_INFO("started segmentation client");
 
     // planning_scene publisher/ subscriber
-    scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    scene_publisher =  nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 10, PlanningSceneManager::sceneCallback, this);
     ROS_INFO("started nodes for planning_scene");
     
     ROS_INFO("waiting for object_fitter");
@@ -35,6 +35,8 @@ PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_
     //wait for objectfitter to be running
     object_fitter_client.waitForServer();
     ROS_INFO("found object_fitter server");
+    
+    this->object_in_gripper.id = -1;
 }
 
 
@@ -69,12 +71,16 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     if(prev_objects.size() > 0){
         ROS_INFO("We have old objects, clearing them.");
         moveit_msgs::PlanningScene planning_scene_clear;
-        //planning_scene_clear.robot_state.attached_collision_objects.clear();
-        planning_scene_clear.world.collision_objects.clear();
+        //planning_scene_clear.robot_state.attached_collision_objects.clear();//?
+        //planning_scene_clear.world.collision_objects.clear();
         planning_scene_clear.is_diff = true;
         planning_scene_clear.robot_state.is_diff = true;
 
         for(moveit_msgs::CollisionObject o : prev_objects){
+            if(o.id == this->object_in_gripper.id){
+                ROS_INFO_STREAM("NOT removing" << o.id);
+                continue;
+            }
             ROS_INFO_STREAM("Removing " << o.id);
             o.operation = o.REMOVE;
             planning_scene_clear.world.collision_objects.push_back(o);
@@ -138,4 +144,13 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     ROS_INFO_STREAM("sending result, storing " << prev_objects.size() << " obstacle(s)");
     psm_server.setSucceeded(result);
 
+}
+
+void PlanningSceneManager::sceneCallback(const moveit_msgs::PlanningScene& update){
+    ROS_INFO_STREAM("updating planning scene");
+    this->currentScene = update;
+    if(currentScene.robot_state.attached_collision_objects.size() > 0){
+        ROS_INFO_STREAM("update attached collision object in robot state");
+        this->object_in_gripper = currentScene.robot_state.attached_collision_objects.at(0);
+    }
 }

@@ -49,12 +49,16 @@ private:
     ros::Publisher scene_publisher;
     ros::ServiceClient object_tracker_client;
 
+    moveit_msgs::PlanningScene currentScene;
+    
     std::vector<moveit_msgs::CollisionObject> prev_objects;
+    moveit_msgs::CollisionObject object_in_gripper;
 
 public:
     PlanningSceneManager(std::string name, std::string fitter_server);
     ~PlanningSceneManager();
     void execute(const planning_scene_manager_msgs::PlanningSceneManagerRequestGoalConstPtr &goal);
+    void sceneCallback(const moveit_msgs::PlanningScene& currentScene);
 
 };
 
