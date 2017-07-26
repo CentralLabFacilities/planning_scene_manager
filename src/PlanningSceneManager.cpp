@@ -36,7 +36,7 @@ PlanningSceneManager::PlanningSceneManager(std::string name, std::string fitter_
     object_fitter_client.waitForServer();
     ROS_INFO("found object_fitter server");
     
-    this->object_in_gripper.id = "";
+    this->object_in_gripper.object.id = "";
 }
 
 
