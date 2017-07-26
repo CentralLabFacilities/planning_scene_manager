@@ -69,7 +69,7 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     if(prev_objects.size() > 0){
         ROS_INFO("We have old objects, clearing them.");
         moveit_msgs::PlanningScene planning_scene_clear;
-        planning_scene_clear.robot_state.attached_collision_objects.clear();
+        //planning_scene_clear.robot_state.attached_collision_objects.clear();
         planning_scene_clear.world.collision_objects.clear();
         planning_scene_clear.is_diff = true;
         planning_scene_clear.robot_state.is_diff = true;
