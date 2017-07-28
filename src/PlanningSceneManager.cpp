@@ -72,16 +72,16 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
     if(prev_objects.size() > 0){
         ROS_INFO("We have old objects, clearing them.");
         moveit_msgs::PlanningScene planning_scene_clear;
-        //planning_scene_clear.robot_state.attached_collision_objects.clear();//?
+        planning_scene_clear.robot_state.attached_collision_objects.clear();//?
         planning_scene_clear.world.collision_objects.clear();
         planning_scene_clear.is_diff = true;
         planning_scene_clear.robot_state.is_diff = true;
 
         for(moveit_msgs::CollisionObject o : prev_objects){
-            if(o.id == this->object_in_gripper.object.id){
-                ROS_INFO_STREAM("NOT removing" << o.id);
-                continue;
-            }
+        //    if(o.id == this->object_in_gripper.object.id){
+        //        ROS_INFO_STREAM("NOT removing object with id " << o.id);
+        //        continue;
+        //    }
             ROS_INFO_STREAM("Removing " << o.id);
             o.operation = o.REMOVE;
             planning_scene_clear.world.collision_objects.push_back(o);
@@ -148,10 +148,10 @@ void PlanningSceneManager::execute(const planning_scene_manager_msgs::PlanningSc
 }
 
 void PlanningSceneManager::sceneCallback(const moveit_msgs::PlanningScene& update){
-    ROS_INFO_STREAM("updating planning scene");
-    this->currentScene = update;
+    //ROS_INFO_STREAM("updating planning scene");
+    //this->currentScene = update;
     if(currentScene.robot_state.attached_collision_objects.size() > 0){
-        ROS_INFO_STREAM("update attached collision object in robot state");
         this->object_in_gripper = currentScene.robot_state.attached_collision_objects[0];
+        ROS_INFO_STREAM("update attached collision object in robot state, " << this->object_in_gripper.object.id);
     }
 }
